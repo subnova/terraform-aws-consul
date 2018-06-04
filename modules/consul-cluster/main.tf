@@ -22,7 +22,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
   # Run a fixed number of instances in the ASG
   min_size             = "${var.cluster_size}"
-  max_size             = "${var.cluster_size}"
+  max_size             = "${var.cluster_size + 1}"
   desired_capacity     = "${var.cluster_size}"
   termination_policies = ["${var.termination_policies}"]
 
