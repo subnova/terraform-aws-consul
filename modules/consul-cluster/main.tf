@@ -11,9 +11,7 @@ terraform {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_autoscaling_group" "autoscaling_group" {
-  lifecycle { create_before_destroy = true }
-
-  name = "${var.cluster_name} - ${aws_launch_configuration.launch_configuration.name}"
+  name_prefix = "${var.cluster_name}"
 
   launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
 
