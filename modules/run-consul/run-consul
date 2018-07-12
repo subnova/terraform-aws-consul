@@ -43,6 +43,7 @@ function print_usage {
   echo -e "  --ca-path\t\tPath to the directory of CA files used to verify outgoing connections. Optional. Must be specified with --enable-rpc-encryption."
   echo -e "  --cert-file-path\t\tPath to the certificate file used to verify incoming connections. Optional. Must be specified with --enable-rpc-encryption and --key-file-path."
   echo -e "  --key-file-path\t\tPath to the certificate key used to verify incoming connections. Optional. Must be specified with --enable-rpc-encryption and --cert-file-path."
+  echo -e "  --bootstrap-size\t\tIf set, the expected number of servers to bootstrap, otherwise derived from size of ASG. Optional."
   echo -e "  --environment\t\A single environment variable in the key/value pair form 'KEY=\"val\"' to pass to Consul as environment variable when starting it up. Repeat this option for additional variables. Optional."
   echo -e "  --skip-consul-config\tIf this flag is set, don't generate a Consul configuration file. Optional. Default is false."
   echo
@@ -202,6 +203,7 @@ function generate_consul_config {
   local readonly ca_path="${10}"
   local readonly cert_file_path="${11}"
   local readonly key_file_path="${12}"
+  local readonly bootstrap_size="${13}"
   local readonly config_path="$config_dir/$CONSUL_CONFIG_FILE"
 
   local instance_id=""
@@ -225,13 +227,17 @@ EOF
 
   local bootstrap_expect=""
   if [[ "$server" == "true" ]]; then
-    local instance_tags=""
-    local cluster_size=""
+    if [[ -z "$bootstrap_size" ]]; then
+      local instance_tags=""
+      local cluster_size=""
 
-    instance_tags=$(get_instance_tags "$instance_id" "$instance_region")
-    cluster_size=$(get_cluster_size "$instance_tags" "$instance_region")
+      instance_tags=$(get_instance_tags "$instance_id" "$instance_region")
+      cluster_size=$(get_cluster_size "$instance_tags" "$instance_region")
 
-    bootstrap_expect="\"bootstrap_expect\": $cluster_size,"
+      bootstrap_expect="\"bootstrap_expect\": $cluster_size,"
+    elif
+      bootstrap_expect="\"bootstrap_expect\": $bootstrap_size,"
+    fi
     ui="true"
   fi
 
@@ -333,6 +339,7 @@ function run {
   local key_file_path=""
   local environment=()
   local skip_consul_config="false"
+  local bootstrap_size=""
   local all_args=()
 
   while [[ $# > 0 ]]; do
@@ -411,6 +418,11 @@ function run {
         key_file_path="$2"
         shift
         ;;
+      --bootstrap-size)
+	assert_not_empty "$key" "$2"
+	bootstrap_size="$2"
+	shift
+	;;
       --environment)
         assert_not_empty "$key" "$2"
         environment+=("$2")
@@ -478,7 +490,7 @@ function run {
       assert_not_empty "--cert-file-path" "$cert_file_path"
       assert_not_empty "--key_file_path" "$key_file_path"
     fi
-    generate_consul_config "$server" "$config_dir" "$user" "$cluster_tag_key" "$cluster_tag_value" "$datacenter" "$enable_gossip_encryption" "$gossip_encryption_key" "$enable_rpc_encryption" "$ca_path" "$cert_file_path" "$key_file_path"
+    generate_consul_config "$server" "$config_dir" "$user" "$cluster_tag_key" "$cluster_tag_value" "$datacenter" "$enable_gossip_encryption" "$gossip_encryption_key" "$enable_rpc_encryption" "$ca_path" "$cert_file_path" "$key_file_path" "$bootstrap_size"
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$data_dir" "$log_dir" "$bin_dir" "$user" "${environment[@]}"
