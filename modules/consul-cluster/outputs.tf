@@ -1,5 +1,5 @@
-output "asg_name" {
-  value = "${aws_autoscaling_group.autoscaling_group.name}"
+output "asg_names" {
+  value = "${aws_autoscaling_group.autoscaling_group.*.name}"
 }
 
 output "cluster_size" {

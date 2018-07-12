@@ -11,17 +11,19 @@ terraform {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_autoscaling_group" "autoscaling_group" {
-  name_prefix = "${var.cluster_name}"
+  count = "${var.cluster_size}"
+
+  name_prefix = "${var.cluster_name}-${element(var.availability_zones, count.index)}-"
 
   launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
 
-  availability_zones  = ["${var.availability_zones}"]
-  vpc_zone_identifier = ["${var.subnet_ids}"]
+  availability_zones  = ["${element(var.availability_zones, count.index)}"]
+  vpc_zone_identifier = ["${element(var.subnet_ids, count.index)}"]
 
   # Run a fixed number of instances in the ASG
-  min_size             = "${var.cluster_size}"
-  max_size             = "${var.cluster_size * 2}"
-  desired_capacity     = "${var.cluster_size}"
+  min_size             = "0"
+  max_size             = "1"
+  desired_capacity     = "1"
   termination_policies = ["${var.termination_policies}"]
 
   health_check_type         = "${var.health_check_type}"
@@ -31,7 +33,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   tags = [
     {
       key                 = "Name"
-      value               = "${var.cluster_name}"
+      value               = "${var.cluster_name}-${element(var.availability_zones, count.index)}"
       propagate_at_launch = true
     },
     {
