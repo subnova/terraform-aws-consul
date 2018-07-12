@@ -235,7 +235,7 @@ EOF
       cluster_size=$(get_cluster_size "$instance_tags" "$instance_region")
 
       bootstrap_expect="\"bootstrap_expect\": $cluster_size,"
-    elif
+    else
       bootstrap_expect="\"bootstrap_expect\": $bootstrap_size,"
     fi
     ui="true"
