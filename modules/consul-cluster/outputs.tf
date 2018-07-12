@@ -3,7 +3,7 @@ output "asg_names" {
 }
 
 output "cluster_size" {
-  value = "${aws_autoscaling_group.autoscaling_group.desired_capacity}"
+  value = "${length(aws_autoscaling_group.autoscaling_group.*.name)}"
 }
 
 output "launch_config_name" {
